@@ -25,7 +25,7 @@ All examples are written in **C++17** and built with **ESP‑IDF v5.4** for targ
 | Component | Description |
 |-----------|-------------|
 | `board` | Header-only `board_pins.h` — the single source of truth for the board pinout. |
-| `modbus` | Header-only Modbus **RTU master** transport over RS485 (`Modbus::RtuMaster`, CRC‑16/MODBUS). Used by `wifi_modbus_gateway`. |
+| `modbus` | Header-only Modbus **RTU** transport over RS485 — `Modbus::RtuMaster` (client) and `Modbus::RtuSlave` (server), CRC‑16/MODBUS. Used by `wifi_modbus_gateway` and `modbus_rtu_slave`. |
 
 ### Protocol loopbacks (`examples/`)
 | Example | Interface | What it does |
@@ -46,14 +46,17 @@ Each comes up as a Wi‑Fi **soft‑AP** with a TCP server on `192.168.4.1`.
 | `wifi_to_spi` | TCP ↔ SPI master | 3335 | length-prefixed request/response |
 | `wifi_to_i2c` | TCP ↔ I2C master | 3337 | length-prefixed request/response |
 
-### Modbus gateway (`examples/`)
-| Example | Bridges | TCP port | Translation |
-|---------|---------|----------|-------------|
-| `wifi_modbus_gateway` | Modbus **TCP** ↔ Modbus **RTU** (RS485) | 502 | full protocol gateway (MBAP ↔ address + CRC‑16) |
+### Modbus (`examples/`)
+| Example | Role | Interface |
+|---------|------|-----------|
+| `wifi_modbus_gateway` | Modbus **TCP** ↔ Modbus **RTU** gateway (MBAP ↔ address + CRC‑16) | Wi‑Fi TCP :502 ↔ RS485 |
+| `modbus_rtu_slave` | Modbus **RTU slave** (test peer) — 16-register bank, FC 0x03/0x04/0x06/0x10 | RS485, addr 1 |
 
-Unlike the transparent `wifi_to_rs485` bridge, this speaks Modbus on both sides: a
-Wi‑Fi Modbus TCP server translates each request to a Modbus RTU transaction on the bus
-using the `modbus` component, so any Modbus TCP client can poll RTU slaves over the air.
+Unlike the transparent `wifi_to_rs485` bridge, the gateway speaks Modbus on both
+sides: a Wi‑Fi Modbus TCP server translates each request to a Modbus RTU transaction
+on the bus using the `modbus` component, so any Modbus TCP client can poll RTU slaves
+over the air. Flash the gateway to one board and `modbus_rtu_slave` to another on the
+same RS485 bus to exercise the whole path end to end.
 
 ### Bluetooth LE converters (`examples/`)
 The ESP32‑C3 is **BLE‑only** (no Classic Bluetooth / SPP). Each converter is a GATT

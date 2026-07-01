@@ -119,20 +119,20 @@ void gateway_client(int sock)
         const uint8_t  unit  = mbap[6];
 
         // length counts unit id (1) + PDU (>=1); PDU capped at 253.
-        if (proto != 0 || len < 2 || len > 1 + Modbus::RtuMaster::kMaxPdu) {
+        if (proto != 0 || len < 2 || len > 1 + Modbus::kMaxPdu) {
             ESP_LOGW(TAG, "bad MBAP (proto=%u len=%u), dropping client", proto, len);
             break;
         }
         const size_t pduLen = len - 1;
-        uint8_t pdu[Modbus::RtuMaster::kMaxPdu];
+        uint8_t pdu[Modbus::kMaxPdu];
         if (!recv_exact(sock, pdu, pduLen)) break;
 
         // Forward to the RTU bus.
-        uint8_t rpdu[Modbus::RtuMaster::kMaxPdu];
+        uint8_t rpdu[Modbus::kMaxPdu];
         size_t  rlen = sizeof(rpdu);
         const Modbus::Status st = g_mb.transceive(unit, pdu, pduLen, rpdu, &rlen, kRtuTimeoutMs);
 
-        uint8_t out[7 + Modbus::RtuMaster::kMaxPdu];
+        uint8_t out[7 + Modbus::kMaxPdu];
         out[0] = mbap[0];  out[1] = mbap[1];        // echo transaction id
         out[2] = 0;        out[3] = 0;              // protocol id
         out[6] = unit;
