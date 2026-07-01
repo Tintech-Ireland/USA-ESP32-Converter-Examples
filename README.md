@@ -25,6 +25,7 @@ All examples are written in **C++17** and built with **ESP‑IDF v5.4** for targ
 | Component | Description |
 |-----------|-------------|
 | `board` | Header-only `board_pins.h` — the single source of truth for the board pinout. |
+| `modbus` | Header-only Modbus **RTU master** transport over RS485 (`Modbus::RtuMaster`, CRC‑16/MODBUS). Used by `wifi_modbus_gateway`. |
 
 ### Protocol loopbacks (`examples/`)
 | Example | Interface | What it does |
@@ -44,6 +45,15 @@ Each comes up as a Wi‑Fi **soft‑AP** with a TCP server on `192.168.4.1`.
 | `wifi_to_can` | TCP ↔ CAN | 3334 | 2-byte length-prefixed frames |
 | `wifi_to_spi` | TCP ↔ SPI master | 3335 | length-prefixed request/response |
 | `wifi_to_i2c` | TCP ↔ I2C master | 3337 | length-prefixed request/response |
+
+### Modbus gateway (`examples/`)
+| Example | Bridges | TCP port | Translation |
+|---------|---------|----------|-------------|
+| `wifi_modbus_gateway` | Modbus **TCP** ↔ Modbus **RTU** (RS485) | 502 | full protocol gateway (MBAP ↔ address + CRC‑16) |
+
+Unlike the transparent `wifi_to_rs485` bridge, this speaks Modbus on both sides: a
+Wi‑Fi Modbus TCP server translates each request to a Modbus RTU transaction on the bus
+using the `modbus` component, so any Modbus TCP client can poll RTU slaves over the air.
 
 ### Bluetooth LE converters (`examples/`)
 The ESP32‑C3 is **BLE‑only** (no Classic Bluetooth / SPP). Each converter is a GATT
@@ -85,6 +95,9 @@ and wire framing are identical to the Wi‑Fi converters.
 - **Bluetooth LE** — NimBLE host exposing the Nordic UART Service (NUS): an RX
   characteristic (central → device, Write) and a TX characteristic (device →
   central, Notify).
+- **Modbus** — a Modbus **RTU master** transport (`components/modbus`) over RS485
+  (CRC‑16/MODBUS, RTU inter-frame timing), plus a Modbus **TCP↔RTU gateway** example
+  (`wifi_modbus_gateway`).
 - **UART0 / USB** — UART0 is the TTL console header; the native USB‑Serial‑JTAG is
   used for flashing and the log console.
 
