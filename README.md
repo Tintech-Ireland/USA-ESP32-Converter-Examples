@@ -51,6 +51,7 @@ Each comes up as a Wi‑Fi **soft‑AP** with a TCP server on `192.168.4.1`.
 |---------|------|-----------|
 | `wifi_modbus_gateway` | Modbus **TCP** ↔ Modbus **RTU** gateway (MBAP ↔ address + CRC‑16) | Wi‑Fi TCP :502 ↔ RS485 |
 | `modbus_rtu_slave` | Modbus **RTU slave** (test peer) — 16-register bank, FC 0x03/0x04/0x06/0x10 | RS485, addr 1 |
+| `modbus_tcp_client` | Modbus **TCP client** (WiFi station) — polls/writes the gateway; on-board `pymodbus` equivalent | Wi‑Fi TCP :502 |
 
 Unlike the transparent `wifi_to_rs485` bridge, the gateway speaks Modbus on both
 sides: a Wi‑Fi Modbus TCP server translates each request to a Modbus RTU transaction

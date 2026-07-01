@@ -1,0 +1,2 @@
+# Console on the native USB-Serial-JTAG port (flash + monitor over one cable).
+CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG=y
