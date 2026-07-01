@@ -1,0 +1,5 @@
+# Route the console (stdout + ESP_LOG) to the native USB-Serial-JTAG port, so the
+# board can be flashed AND monitored over its single USB connection.
+# The CAN example uses the TWAI peripheral (GPIO7/GPIO6), so the console choice
+# does not conflict with the protocol under test.
+CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG=y

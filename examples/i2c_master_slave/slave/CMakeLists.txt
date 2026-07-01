@@ -1,0 +1,5 @@
+# i2c_slave - ESP-IDF project (slave half of the I2C master<->slave demo)
+cmake_minimum_required(VERSION 3.16)
+set(EXTRA_COMPONENT_DIRS "${CMAKE_CURRENT_LIST_DIR}/../../../components")
+include($ENV{IDF_PATH}/tools/cmake/project.cmake)
+project(i2c_slave)

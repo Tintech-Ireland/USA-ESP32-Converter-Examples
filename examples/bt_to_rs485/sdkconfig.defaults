@@ -1,0 +1,9 @@
+# Console on the native USB-Serial-JTAG port (flash + monitor over one cable).
+CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG=y
+
+# Bluetooth: NimBLE host (BLE-only, lightweight - suits the ESP32-C3).
+CONFIG_BT_ENABLED=y
+CONFIG_BT_NIMBLE_ENABLED=y
+
+# BLE app image is large; give it a bigger factory partition than the 1 MB default.
+CONFIG_PARTITION_TABLE_SINGLE_APP_LARGE=y
