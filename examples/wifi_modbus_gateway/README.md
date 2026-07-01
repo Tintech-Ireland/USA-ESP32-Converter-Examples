@@ -51,7 +51,8 @@ mbpoll -m tcp -a 1 -r 1 -c 4 -t 4 192.168.4.1
 
 ## Notes
 - The `modbus` component is a **master/client** RTU transport (`Modbus::RtuMaster`) —
-  reusable on its own for a straight RTU master. Not yet hardware-verified against a
-  real RTU slave; wire the gateway board's RS485 to a Modbus RTU device (or a second
-  board acting as an RTU slave) and poll it over TCP to verify.
+  reusable on its own for a straight RTU master.
+- **HW-verified** end-to-end against `modbus_rtu_slave` on the RS485 bus: a Modbus TCP
+  client read holding registers through the gateway and saw the slave's live uptime /
+  request-count registers update, confirming the full TCP → RTU → TCP path.
 - Modbus TCP is not authenticated; run this on a trusted/isolated network.
