@@ -25,7 +25,6 @@ All examples are written in **C++17** and built with **ESP‑IDF v5.4** for targ
 | Component | Description |
 |-----------|-------------|
 | `board` | Header-only `board_pins.h` — the single source of truth for the board pinout. |
-| `serial_transport` | Header-only "SimpleProtocol" framing (STX/ETX + byte-stuffing + CRC‑16/MODBUS + ENQ/ACK) with an ESP‑IDF UART backend. Used by `serial_selftest`. |
 
 ### Protocol loopbacks (`examples/`)
 | Example | Interface | What it does |
@@ -35,7 +34,6 @@ All examples are written in **C++17** and built with **ESP‑IDF v5.4** for targ
 | `rs485_to_rs485` | RS485 | Two+ boards, half-duplex, DE auto-toggled; each sends a counter line and prints received. |
 | `i2c_master_slave` | I2C | `master/` + `slave/` firmwares; master writes a counter to slave `0x42` @100 kHz. |
 | `spi_master_slave` | SPI | `master/` + `slave/` firmwares; full-duplex counter exchange @1 MHz, mode 0. |
-| `serial_selftest` | UART | Smoke test for the `serial_transport` component (framing + CRC + ENQ/ACK). |
 
 ### Wi‑Fi converters (`examples/`)
 Each comes up as a Wi‑Fi **soft‑AP** with a TCP server on `192.168.4.1`.

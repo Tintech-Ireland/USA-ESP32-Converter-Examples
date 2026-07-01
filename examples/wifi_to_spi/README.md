@@ -22,10 +22,11 @@ full-duplex SPI transfer reads as many bytes as it writes.
   `EN_5V` (GPIO3) is held **LOW** so the transceivers stay off and clear of the bus.
 - Max single transaction: **64 bytes**.
 
-## Why length-prefix instead of simprot here
-Over TCP you already have reliable, ordered, checksummed delivery, so simprot's CRC
-+ ENQ/ACK would be redundant. A length prefix gives just the message framing TCP
-lacks. The request/response shape maps directly onto SPI's master-driven,
+## Why just a length prefix
+Over TCP you already have reliable, ordered, checksummed delivery, so a heavier
+framing protocol (CRC + an ACK handshake) would be redundant. A length prefix gives
+just the message framing TCP lacks. The request/response shape maps directly onto
+SPI's master-driven,
 one-transaction-in-per-transaction-out nature.
 
 ## Test rig

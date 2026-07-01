@@ -1,3 +1,0 @@
-# Console on the native USB-Serial-JTAG port (flash + monitor over one cable).
-# The transport uses UART1 (RS232 pins), so the console choice does not conflict.
-CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG=y

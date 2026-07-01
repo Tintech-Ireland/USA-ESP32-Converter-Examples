@@ -28,5 +28,6 @@ Jumper `TX_RS232 → RX_RS232` on the board. Then everything you type into
   `wifi_init_softap()` with a STA init and use the DHCP-assigned IP; the TCP
   server and bridge are unchanged.
 - Credentials, port, and UART params are constants at the top of `main.cpp`.
-- Raw bridge by design. The framed variant (CRC, ENQ/ACK) would use the
-  `serial_transport` component instead; this converter intentionally does not.
+- Raw bridge by design. A framed variant (adding a CRC + ACK handshake) is
+  unnecessary over TCP, which is already reliable and ordered; this bridge stays
+  transparent.

@@ -26,12 +26,11 @@ length = 6 + dlc
 Frames sent over TCP are transmitted on the bus; frames received from the bus are
 sent (length-prefixed) to the TCP client.
 
-## Why length-prefix instead of simprot here
-Over TCP you already have reliable, ordered, checksummed delivery, so simprot's
-CRC + ENQ/ACK would be redundant, and its stop-and-wait handshake would bottleneck
-a busy CAN bus. A length prefix gives just the message framing TCP lacks, with no
-per-frame round-trip. (For request/response converters, simprot over a
-`ReaderWriter`/TCP backend remains a clean option.)
+## Why just a length prefix
+Over TCP you already have reliable, ordered, checksummed delivery, so a heavier
+framing protocol (CRC + an ACK handshake) would be redundant, and a stop-and-wait
+handshake would bottleneck a busy CAN bus. A length prefix gives just the message
+framing TCP lacks, with no per-frame round-trip.
 
 ## Test rig
 - This board = `wifi_to_can` (AP + TCP↔CAN).
