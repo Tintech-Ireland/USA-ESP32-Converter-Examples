@@ -55,9 +55,11 @@ Each comes up as a Wi‑Fi **soft‑AP** with a TCP server on `192.168.4.1`.
 
 Unlike the transparent `wifi_to_rs485` bridge, the gateway speaks Modbus on both
 sides: a Wi‑Fi Modbus TCP server translates each request to a Modbus RTU transaction
-on the bus using the `modbus` component, so any Modbus TCP client can poll RTU slaves
-over the air. Flash the gateway to one board and `modbus_rtu_slave` to another on the
-same RS485 bus to exercise the whole path end to end.
+on the bus using the `modbus` component, so any Modbus TCP client (`pymodbus`, `mbpoll`,
+a SCADA/HMI) can poll RTU slaves over the air. To run the whole thing on **three boards
+with no PC**, flash `wifi_modbus_gateway`, `modbus_rtu_slave` (wired on the RS485 bus),
+and `modbus_tcp_client` (the on-board client) — the client reads/writes the slave's
+registers straight through the gateway.
 
 ### Bluetooth LE converters (`examples/`)
 The ESP32‑C3 is **BLE‑only** (no Classic Bluetooth / SPP). Each converter is a GATT
