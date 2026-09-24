@@ -197,8 +197,9 @@ idf.py -p /dev/ttyACM0 flash monitor   # exit monitor with Ctrl-]
 ```
 
 For the split examples (`i2c_master_slave`, `spi_master_slave`), build/flash each
-half with `-C`:
+half with `-C` from the example directory:
 ```sh
+cd examples/i2c_master_slave           # or examples/spi_master_slave
 idf.py -C master -p /dev/ttyACM0 flash
 idf.py -C slave  -p /dev/ttyACM1 flash
 ```

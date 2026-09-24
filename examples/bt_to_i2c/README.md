@@ -32,6 +32,9 @@ bridge  -> [ u16 len ][ status | read bytes(rlen, only if status==0) ]
   pull-ups. ESP-IDF v5.x bus-based driver; a device handle is created per address on
   demand and cached.
 - **MTU:** requests 247; notifications chunked to `ATT_MTU - 3`.
+- **Framing errors:** an invalid length prefix, or writes arriving faster than the
+  bridge can queue them, drop the BLE connection so the next session starts on a
+  clean frame boundary. Queued bytes are discarded on disconnect.
 
 ## Testing
 With nRF Connect: connect to `USA2-BT-I2C`, subscribe to TX, and write a framed
