@@ -8,7 +8,7 @@ Legend: `[ ]` open · **Bug** confirmed by reading the code · **Likely** probab
 hardware · **Doc** documentation/comment mismatch.
 
 ## Bugs
-- [ ] **Bug — `bt_to_i2c` rejects writes of 31–32 bytes.** `main.cpp:215`
+- [x] **Bug — `bt_to_i2c` rejects writes of 31–32 bytes.** *(fixed in code; verify on hardware)* `main.cpp:215`
   `acc[3 + kMaxData]` (35 B) can't hold a max frame of `2 + 3 + 32` = 37 B; the frame is
   discarded and no reply is sent. Fix: `acc[2 + 3 + kMaxData]`, check `len > 3 + kMaxData`.
   *Test:* `bt_to_i2c` + `i2c_master_slave/slave`, send wlen=32.

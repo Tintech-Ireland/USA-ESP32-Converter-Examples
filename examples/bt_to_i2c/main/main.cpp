@@ -212,7 +212,7 @@ void i2c_init()
 // reply [len][status|rbytes].
 void bridge_task(void*)
 {
-    uint8_t acc[3 + kMaxData];
+    uint8_t acc[2 + 3 + kMaxData];          // [u16 len] + addr|wlen|rlen + write bytes
     size_t  accLen = 0;
     uint8_t tmp[128];
     uint8_t rbuf[kMaxData];
@@ -225,7 +225,7 @@ void bridge_task(void*)
         }
         while (accLen >= 2) {
             const uint16_t len = static_cast<uint16_t>((acc[0] << 8) | acc[1]);
-            if (len < 3 || len > sizeof(acc)) { ESP_LOGW(TAG, "framing error (len=%u), resync", len); accLen = 0; break; }
+            if (len < 3 || len > 3 + kMaxData) { ESP_LOGW(TAG, "framing error (len=%u), resync", len); accLen = 0; break; }
             if (accLen < 2u + len) break;
 
             const uint8_t* p    = acc + 2;
