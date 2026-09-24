@@ -25,6 +25,9 @@ the request length. The 2-byte big-endian length prefix delimits each message
 - **SPI:** master on SPI2, 1 MHz, mode 0. Borrowed pins **MOSI=GPIO2, SCLK=GPIO5,
   MISO=GPIO7, CS=GPIO10**; `EN_5V` held low so the transceivers stay off the bus.
 - **MTU:** requests 247; notifications chunked to `ATT_MTU - 3`. Max 64 B/transaction.
+- **Framing errors:** an invalid length prefix, or writes arriving faster than the
+  bridge can queue them, drop the BLE connection so the next session starts on a
+  clean frame boundary. Queued bytes are discarded on disconnect.
 
 ## Testing
 With nRF Connect: connect to `USA2-BT-SPI`, subscribe to TX, and write

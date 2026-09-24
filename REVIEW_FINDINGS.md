@@ -19,12 +19,14 @@ hardware · **Doc** documentation/comment mismatch.
   rail. Works only if the pin defaults high. *Test:* measure 5 V rail at boot; confirm
   schematic pull-up. Fix: drive HIGH explicitly, or document the pull-up.
 - [ ] **BLE CAN/SPI/I2C bridges lose data / desync** (`bt_to_can`, `bt_to_spi`, `bt_to_i2c`):
-  - overflow path discards the newly read bytes as well (`tmp[128]` > accumulator) —
-    receive straight into `acc + accLen` with the free space instead;
-  - `xStreamBufferSend` result ignored in the write callback (drops bytes mid-frame);
-  - reassembly state not reset on connect/disconnect;
-  - partial notify on `BLE_HS_ENOMEM` leaves a half frame on the stream.
-  *Test:* burst several frames in one write; disconnect mid-frame then reconnect.
+  - [x] overflow path discards the newly read bytes as well — *fixed: receive straight
+    into the accumulator's free space*;
+  - [x] `xStreamBufferSend` partial writes — *fixed: whole write or disconnect*;
+  - [x] reassembly state not reset on disconnect — *fixed: flush on disconnect*;
+  - [x] framing error can't resync — *fixed: drop the connection*;
+  - [ ] partial notify on `BLE_HS_ENOMEM` leaves a half frame on the stream (TX side, open).
+  *Test:* burst several frames in one write; send a bad length; disconnect mid-frame
+  then reconnect and check the next frame is handled.
 - [ ] **Dead TCP clients hang the Wi‑Fi converters and the Modbus gateway.** No
   keepalive / receive timeout, single client, `listen(1)`: a client that vanishes
   without FIN blocks all new clients. Fix: `SO_KEEPALIVE` + `TCP_KEEPIDLE/INTVL/CNT`

@@ -22,6 +22,7 @@
 // Uses the NimBLE host (CONFIG_BT_NIMBLE_ENABLED).
 //
 
+#include <atomic>
 #include <cstring>
 
 #include "freertos/FreeRTOS.h"
@@ -72,6 +73,8 @@ uint16_t                g_dev_addr = 0xFFFF;
 
 StreamBufferHandle_t g_rx_stream = nullptr;
 SemaphoreHandle_t    g_tx_mutex  = nullptr;
+std::atomic<uint32_t> g_rx_epoch{0};         // bumped when stale RX bytes must be flushed
+std::atomic<bool>     g_rx_discard{false};   // reject RX writes until the next connection
 
 void start_advertising();
 
@@ -114,13 +117,30 @@ void send_frame(const uint8_t* payload, uint16_t plen)
     ble_send(buf, 2u + plen);
 }
 
+// Framing on the RX byte stream is lost (bad length, or bytes had to be dropped):
+// there is no way to find the next frame boundary, so ignore further writes, flush
+// what is queued and drop the link. The next central starts from a clean stream.
+void drop_connection()
+{
+    g_rx_discard = true;
+    ++g_rx_epoch;
+    const uint16_t conn = g_conn_handle;
+    if (conn != BLE_HS_CONN_HANDLE_NONE) ble_gap_terminate(conn, BLE_ERR_REM_USER_CONN_TERM);
+}
+
 int rx_access_cb(uint16_t, uint16_t, struct ble_gatt_access_ctxt* ctxt, void*)
 {
     if (ctxt->op != BLE_GATT_ACCESS_OP_WRITE_CHR) return BLE_ATT_ERR_UNLIKELY;
     uint8_t  buf[512];
     uint16_t out = 0;
     if (ble_hs_mbuf_to_flat(ctxt->om, buf, sizeof(buf), &out) != 0) return BLE_ATT_ERR_UNLIKELY;
-    if (out > 0) xStreamBufferSend(g_rx_stream, buf, out, 0);
+    if (out == 0 || g_rx_discard) return 0;
+    if (xStreamBufferSpacesAvailable(g_rx_stream) < out) {   // never enqueue part of a write
+        ESP_LOGW(TAG, "RX backlog full (%u bytes dropped), disconnecting to resync", out);
+        drop_connection();
+        return BLE_ATT_ERR_INSUFFICIENT_RES;
+    }
+    xStreamBufferSend(g_rx_stream, buf, out, 0);
     return 0;
 }
 
@@ -142,13 +162,14 @@ int gap_event(struct ble_gap_event* event, void*)
 {
     switch (event->type) {
     case BLE_GAP_EVENT_CONNECT:
-        if (event->connect.status == 0) { g_conn_handle = event->connect.conn_handle;
+        if (event->connect.status == 0) { g_conn_handle = event->connect.conn_handle; g_rx_discard = false;
             ESP_LOGI(TAG, "central connected (conn=%u)", g_conn_handle); }
         else start_advertising();
         break;
     case BLE_GAP_EVENT_DISCONNECT:
         ESP_LOGI(TAG, "central disconnected (reason=%d)", event->disconnect.reason);
-        g_conn_handle = BLE_HS_CONN_HANDLE_NONE; g_notify_on = false; start_advertising();
+        g_conn_handle = BLE_HS_CONN_HANDLE_NONE; g_notify_on = false; ++g_rx_epoch;
+        start_advertising();
         break;
     case BLE_GAP_EVENT_SUBSCRIBE:
         if (event->subscribe.attr_handle == g_tx_val_handle) {
@@ -214,18 +235,19 @@ void bridge_task(void*)
 {
     uint8_t acc[2 + 3 + kMaxData];          // [u16 len] + addr|wlen|rlen + write bytes
     size_t  accLen = 0;
-    uint8_t tmp[128];
+    uint32_t epoch = g_rx_epoch;
     uint8_t rbuf[kMaxData];
     uint8_t resp[1 + kMaxData];
     for (;;) {
-        const size_t got = xStreamBufferReceive(g_rx_stream, tmp, sizeof(tmp), pdMS_TO_TICKS(50));
-        if (got > 0) {
-            if (accLen + got > sizeof(acc)) { accLen = 0; }         // overflow -> resync
-            else { std::memcpy(acc + accLen, tmp, got); accLen += got; }
+        if (const uint32_t e = g_rx_epoch; e != epoch) {    // disconnect / framing loss
+            epoch = e; xStreamBufferReset(g_rx_stream); accLen = 0;
         }
+        // Read only what fits: unread bytes wait in the stream buffer, so nothing is lost.
+        // A complete frame always fits, so after the parse loop there is always free space.
+        accLen += xStreamBufferReceive(g_rx_stream, acc + accLen, sizeof(acc) - accLen, pdMS_TO_TICKS(50));
         while (accLen >= 2) {
             const uint16_t len = static_cast<uint16_t>((acc[0] << 8) | acc[1]);
-            if (len < 3 || len > 3 + kMaxData) { ESP_LOGW(TAG, "framing error (len=%u), resync", len); accLen = 0; break; }
+            if (len < 3 || len > 3 + kMaxData) { ESP_LOGW(TAG, "framing error (len=%u), disconnecting", len); accLen = 0; drop_connection(); break; }
             if (accLen < 2u + len) break;
 
             const uint8_t* p    = acc + 2;

@@ -25,6 +25,9 @@ byte stream, so each message is delimited with a **2-byte big-endian length pref
   at each bus end** required.
 - **MTU:** requests 247; notifications chunked to `ATT_MTU - 3`. Outbound frames are
   mutex-serialized so a bus frame and a reply never interleave on the byte stream.
+- **Framing errors:** an invalid length prefix, or writes arriving faster than the
+  bridge can queue them, drop the BLE connection so the next session starts on a
+  clean frame boundary. Queued bytes are discarded on disconnect.
 
 ## Notes
 - BLE RX bytes are handed to a stream buffer so the BLE host callback stays lean; a
