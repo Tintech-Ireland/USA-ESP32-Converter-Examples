@@ -206,6 +206,39 @@ idf.py -C slave  -p /dev/ttyACM1 flash
 The ESP32‑C3 enumerates over native USB‑Serial‑JTAG, typically `/dev/ttyACM*` on
 Linux. Per-example wiring and protocol details are in each example's `README.md`.
 
+### Building on Windows
+
+The projects build unchanged on Windows; only the ESP‑IDF setup and port names differ.
+
+1. **Install ESP‑IDF v5.4** with the
+   [ESP‑IDF Windows Installer](https://dl.espressif.com/dl/esp-idf/) (installs the
+   toolchain, Python and Git). Alternatively, clone ESP‑IDF as above and run
+   `install.bat esp32c3` (CMD) or `.\install.ps1 esp32c3` (PowerShell).
+2. **Activate the environment** by opening the *ESP‑IDF 5.4 CMD* / *PowerShell*
+   shortcut the installer creates, or run `export.bat` / `.\export.ps1` from the
+   ESP‑IDF directory (once per shell).
+3. **Build and flash** — same `idf.py` commands, with a `COM` port instead of
+   `/dev/ttyACM*`:
+   ```bat
+   cd examples\wifi_to_rs232
+   idf.py set-target esp32c3
+   idf.py build
+   idf.py -p COM5 flash monitor
+   ```
+   For the split examples, run from the example directory:
+   ```bat
+   cd examples\i2c_master_slave
+   idf.py -C master -p COM5 flash
+   idf.py -C slave  -p COM6 flash
+   ```
+
+Notes:
+- Find the board's COM port in **Device Manager → Ports (COM & LPT)**; it appears as
+  a *USB Serial Device* / *USB JTAG/serial debug unit*.
+- Keep ESP‑IDF and this repo on **short paths without spaces** (e.g. `C:\esp`,
+  `C:\src\USA-ESP32-Converter-Examples`) to avoid Windows path-length and quoting
+  issues.
+
 ---
 
 ## Devices needed to test
