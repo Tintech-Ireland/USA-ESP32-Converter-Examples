@@ -206,6 +206,96 @@ idf.py -C slave  -p /dev/ttyACM1 flash
 The ESP32‑C3 enumerates over native USB‑Serial‑JTAG, typically `/dev/ttyACM*` on
 Linux. Per-example wiring and protocol details are in each example's `README.md`.
 
+### Building on Windows
+
+The projects build unchanged on Windows; only the ESP‑IDF setup and port names differ.
+
+1. **Install ESP‑IDF v5.4** with the
+   [ESP‑IDF Windows Installer](https://dl.espressif.com/dl/esp-idf/) (installs the
+   toolchain, Python and Git). Alternatively, clone ESP‑IDF as above and run
+   `install.bat esp32c3` (CMD) or `.\install.ps1 esp32c3` (PowerShell).
+2. **Activate the environment** by opening the *ESP‑IDF 5.4 CMD* / *PowerShell*
+   shortcut the installer creates, or run `export.bat` / `.\export.ps1` from the
+   ESP‑IDF directory (once per shell).
+3. **Build and flash** — same `idf.py` commands, with a `COM` port instead of
+   `/dev/ttyACM*`:
+   ```bat
+   cd examples\wifi_to_rs232
+   idf.py set-target esp32c3
+   idf.py build
+   idf.py -p COM5 flash monitor
+   ```
+   For the split examples, run from the example directory:
+   ```bat
+   cd examples\i2c_master_slave
+   idf.py -C master -p COM5 flash
+   idf.py -C slave  -p COM6 flash
+   ```
+
+Notes:
+- Find the board's COM port in **Device Manager → Ports (COM & LPT)**; it appears as
+  a *USB Serial Device* / *USB JTAG/serial debug unit*.
+- Keep ESP‑IDF and this repo on **short paths without spaces** (e.g. `C:\esp`,
+  `C:\src\USA-ESP32-Converter-Examples`) to avoid Windows path-length and quoting
+  issues.
+
+### Building on Windows with WSL2
+
+Alternatively, run the Linux toolchain inside **WSL2** and forward the board's USB
+port into it with [usbipd-win](https://github.com/dorssel/usbipd-win). The Linux
+instructions above then apply unchanged.
+
+1. **Install WSL2 + Ubuntu** — in an **Administrator** PowerShell, then reboot:
+   ```powershell
+   wsl --install -d Ubuntu
+   ```
+   Launch *Ubuntu* from the Start menu and create your Linux user. Check it is
+   version 2 with `wsl -l -v` (convert with `wsl --set-version Ubuntu 2` if needed),
+   and keep WSL current with `wsl --update`.
+2. **Install the ESP‑IDF prerequisites** — inside the Ubuntu shell:
+   ```sh
+   sudo apt update
+   sudo apt install -y git wget flex bison gperf python3 python3-pip python3-venv \
+       cmake ninja-build ccache libffi-dev libssl-dev dfu-util libusb-1.0-0
+   sudo usermod -aG dialout $USER     # serial-port access without sudo
+   ```
+   Close the Ubuntu window and run `wsl --shutdown` in PowerShell so the group
+   change takes effect. Then, back in Ubuntu, follow *Install ESP‑IDF (one time)*
+   above (`git clone` + `./install.sh esp32c3`). Clone this repo into the Linux
+   filesystem (e.g. `~/src`), **not** under `/mnt/c` — builds there are many times
+   slower.
+3. **Install usbipd-win on Windows** — in PowerShell:
+   ```powershell
+   winget install --interactive --exact dorssel.usbipd-win
+   ```
+4. **Forward the board into WSL** — plug the board in, then in PowerShell:
+   ```powershell
+   usbipd list                                  # note the BUSID of "USB JTAG/serial debug unit" (303a:1001)
+   usbipd bind --busid 1-4                      # once per device; Administrator PowerShell
+   usbipd attach --wsl --busid 1-4 --auto-attach
+   ```
+   Keep the WSL shell open while attaching. `--auto-attach` keeps the terminal
+   running and re-attaches the board each time it re-enumerates — the ESP32‑C3's
+   native USB drops off the bus on every reset, including the one after flashing.
+   Detach with `Ctrl-C` in that terminal or `usbipd detach --busid 1-4`.
+5. **Flash from WSL** — the board now appears as `/dev/ttyACM0`:
+   ```sh
+   ls /dev/ttyACM*
+   . $HOME/esp/esp-idf/export.sh
+   cd ~/src/USA-ESP32-Converter-Examples/examples/wifi_to_rs232
+   idf.py set-target esp32c3
+   idf.py build
+   idf.py -p /dev/ttyACM0 flash monitor
+   ```
+
+Notes:
+- For a multi-board rig, `bind` and `attach` each board's BUSID; they appear as
+  `/dev/ttyACM0`, `/dev/ttyACM1`, … in attach order.
+- While a device is attached to WSL it is unavailable to Windows (e.g. a Windows
+  serial terminal); `usbipd detach` hands it back.
+- If `/dev/ttyACM0` is missing after attaching, run `wsl --update` — older WSL
+  kernels lack USB/IP or `cdc_acm` support.
+
 ---
 
 ## Devices needed to test
